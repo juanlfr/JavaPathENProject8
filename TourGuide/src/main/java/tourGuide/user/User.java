@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import gpsUtil.location.VisitedLocation;
 import tripPricer.Provider;
@@ -14,8 +15,8 @@ public class User {
 	private String phoneNumber;
 	private String emailAddress;
 	private Date latestLocationTimestamp;
-	private List<VisitedLocation> visitedLocations = new ArrayList<>();
-	private List<UserReward> userRewards = new ArrayList<>();
+	private CopyOnWriteArrayList<VisitedLocation> visitedLocations = new CopyOnWriteArrayList<>();
+	private CopyOnWriteArrayList<UserReward> userRewards = new CopyOnWriteArrayList<>();
 	private UserPreferences userPreferences = new UserPreferences();
 	private List<Provider> tripDeals = new ArrayList<>();
 	public User(UUID userId, String userName, String phoneNumber, String emailAddress) {
@@ -61,7 +62,7 @@ public class User {
 		visitedLocations.add(visitedLocation);
 	}
 	
-	public List<VisitedLocation> getVisitedLocations() {
+	public CopyOnWriteArrayList<VisitedLocation> getVisitedLocations() {
 		return visitedLocations;
 	}
 	
@@ -70,9 +71,14 @@ public class User {
 	}
 	
 	public void addUserReward(UserReward userReward) {
-		if(userRewards.stream().filter(r -> !r.attraction.attractionName.equals(userReward.attraction)).count() == 0) {
+
+		System.out.println("users rewards" + userRewards.toString());
+		//TODO voir si supprimer control
+		if(userRewards.stream().noneMatch(reward -> reward.attraction.attractionName.equals(userReward.attraction.attractionName))) {
 			userRewards.add(userReward);
+			System.out.println("adding user reward" + userReward.toString());
 		}
+
 	}
 	
 	public List<UserReward> getUserRewards() {
@@ -99,4 +105,19 @@ public class User {
 		return tripDeals;
 	}
 
+
+	@Override
+	public String toString() {
+		return "User{" +
+				"userId=" + userId +
+				", userName='" + userName + '\'' +
+				", phoneNumber='" + phoneNumber + '\'' +
+				", emailAddress='" + emailAddress + '\'' +
+				", latestLocationTimestamp=" + latestLocationTimestamp +
+				", visitedLocations=" + visitedLocations +
+				", userRewards=" + userRewards +
+				", userPreferences=" + userPreferences +
+				", tripDeals=" + tripDeals +
+				'}';
+	}
 }
