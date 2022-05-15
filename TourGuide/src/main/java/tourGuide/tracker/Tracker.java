@@ -10,9 +10,10 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.springframework.stereotype.Component;
 import tourGuide.service.TourGuideService;
 import tourGuide.user.User;
-
+@Component
 public class Tracker extends Thread {
     private Logger logger = LoggerFactory.getLogger(Tracker.class);
     private static final long trackingPollingInterval = TimeUnit.MINUTES.toSeconds(5);
@@ -50,11 +51,12 @@ public class Tracker extends Thread {
             logger.debug("Begin Tracker. Tracking " + users.size() + " users.");
             stopWatch.start();
             logger.debug("tourGuideService.trackUserLocation in *** Tracker thread *** ");
-            users.forEach(u -> {
-                System.out.println("Tread state " + currentThread().getState());
-                tourGuideService.trackUserLocation(u);
-                logger.debug("***** In the ForEach tourGuideService.trackUserLocation in *** Tracker thread ***** " + u.getUserId());
-            });
+//            users.forEach(u -> {
+//                System.out.println("Tread state " + currentThread().getState());
+//                tourGuideService.trackUserLocation(u);
+//                logger.debug("***** In the ForEach tourGuideService.trackUserLocation in *** Tracker thread ***** " + u.getUserId());
+//            });
+            tourGuideService.trackUserLocationForkJoin(users);
             stopWatch.stop();
             logger.debug("Tracker Time Elapsed: " + TimeUnit.MILLISECONDS.toSeconds(stopWatch.getTime()) + " seconds.");
             stopWatch.reset();

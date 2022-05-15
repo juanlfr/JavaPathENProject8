@@ -3,6 +3,7 @@ package tourGuide.service;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
+import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -18,6 +19,8 @@ import gpsUtil.location.VisitedLocation;
 import rewardCentral.RewardCentral;
 import tourGuide.DTO.AttractionDTO;
 import tourGuide.helper.InternalTestHelper;
+import tourGuide.task.CalculateRewardTask;
+import tourGuide.task.UserLocationTask;
 import tourGuide.tracker.Tracker;
 import tourGuide.user.User;
 import tourGuide.user.UserReward;
@@ -33,11 +36,11 @@ public class TourGuideService {
     private final GpsUtil gpsUtil;
     private final RewardsService rewardsService;
     private final TripPricer tripPricer = new TripPricer();
-    public final Tracker tracker;
+    public Tracker tracker;
     boolean testMode = true;
 
 
-    public TourGuideService(GpsUtil gpsUtil, RewardsService rewardsService) {
+    public TourGuideService(GpsUtil gpsUtil, RewardsService rewardsService, Tracker tracker) {
 
         // Test correction of NumberFormatException
         Locale.setDefault(Locale.US);
@@ -51,7 +54,7 @@ public class TourGuideService {
             initializeInternalUsers();
             logger.debug("Finished initializing users");
         }
-        tracker = new Tracker(this);
+        this.tracker = tracker;
         logger.debug("New tracker instance");
         addShutDownHook();
     }
@@ -96,6 +99,19 @@ public class TourGuideService {
         rewardsService.calculateRewards(user);
         return visitedLocation;
     }
+    public VisitedLocation trackUserLocationForkJoin(List<User> users) {
+        logger.debug("trackUserLocation ForkJoin");
+        // Create ForkJoin pool
+        ForkJoinPool commonPool = ForkJoinPool.commonPool();
+        // Create our first task
+        UserLocationTask userLocationTask = new UserLocationTask(users);
+        // 4. Invoke the job in the pool
+        VisitedLocation visitedLocationResult = commonPool.invoke(userLocationTask);
+
+        rewardsService.calculateRewardsForkJoin(users);
+
+        return visitedLocationResult;
+    }
 
     public List<AttractionDTO> getNearByAttractions(VisitedLocation visitedLocation, User user) {
 
@@ -106,8 +122,10 @@ public class TourGuideService {
             double distance = rewardsService.getDistance(attraction, visitedLocation.location);
             attractionDistance.put(distance, attraction);
         }
-        attractionDistance.entrySet().stream().sorted(Map.Entry.comparingByKey())
-                .limit(5).forEach(attraction -> attractionToAttractionDTO(attraction.getValue(), visitedLocation, user, attraction.getKey(), nearbyAttractions));
+        attractionDistance.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .limit(5)
+                .forEach(attraction -> attractionToAttractionDTO(attraction.getValue(), visitedLocation, user, attraction.getKey(), nearbyAttractions));
 
         return nearbyAttractions;
     }
@@ -125,7 +143,7 @@ public class TourGuideService {
     private void addShutDownHook() {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
-                //      tracker.stopTracking();
+                 tracker.stopTracking();
             }
         });
     }

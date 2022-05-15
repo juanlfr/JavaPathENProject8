@@ -15,8 +15,8 @@ public class User {
 	private String phoneNumber;
 	private String emailAddress;
 	private Date latestLocationTimestamp;
-	private CopyOnWriteArrayList<VisitedLocation> visitedLocations = new CopyOnWriteArrayList<>();
-	private CopyOnWriteArrayList<UserReward> userRewards = new CopyOnWriteArrayList<>();
+	private List<VisitedLocation> visitedLocations = new ArrayList<>();
+	private List<UserReward> userRewards = new ArrayList<>();
 	private UserPreferences userPreferences = new UserPreferences();
 	private List<Provider> tripDeals = new ArrayList<>();
 	public User(UUID userId, String userName, String phoneNumber, String emailAddress) {
@@ -62,7 +62,7 @@ public class User {
 		visitedLocations.add(visitedLocation);
 	}
 	
-	public CopyOnWriteArrayList<VisitedLocation> getVisitedLocations() {
+	public List<VisitedLocation> getVisitedLocations() {
 		return visitedLocations;
 	}
 	
@@ -73,7 +73,6 @@ public class User {
 	public void addUserReward(UserReward userReward) {
 
 		System.out.println("users rewards" + userRewards.toString());
-		//TODO voir si supprimer control
 		if(userRewards.stream().noneMatch(reward -> reward.attraction.attractionName.equals(userReward.attraction.attractionName))) {
 			userRewards.add(userReward);
 			System.out.println("adding user reward" + userReward.toString());
