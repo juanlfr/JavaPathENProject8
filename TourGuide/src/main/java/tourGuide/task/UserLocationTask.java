@@ -10,7 +10,7 @@ import java.util.concurrent.RecursiveTask;
 
 public class UserLocationTask extends RecursiveTask<VisitedLocation> {
 
-    private static final int SEQUENTIAL_THRESHOLD = 25000;
+    private static final int SEQUENTIAL_THRESHOLD = 200;
 
     private GpsUtil gpsUtil = new GpsUtil();
 

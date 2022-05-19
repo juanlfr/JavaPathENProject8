@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.time.StopWatch;
@@ -92,13 +93,13 @@ public class TestPerformance {
 	@Test
 	public void highVolumeTrackLocationForkJoin() {
 
-		Mockito.doNothing().when(trackerMock).run();
+		Mockito.doNothing().when(trackerMock).start();
 
 		GpsUtil gpsUtil = new GpsUtil();
 
 		RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
 		// Users should be incremented up to 100,000, and test finishes within 15 minutes
-		InternalTestHelper.setInternalUserNumber(100);
+		InternalTestHelper.setInternalUserNumber(1000);
 
 		TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService, trackerMock);
 
@@ -111,6 +112,36 @@ public class TestPerformance {
 		tourGuideService.trackUserLocationForkJoin(allUsers);
 
 		stopWatch.stop();
+
+		System.out.println("highVolumeTrackLocation: Time Elapsed: " + TimeUnit.MILLISECONDS.toSeconds(stopWatch.getTime()) + " seconds.");
+		assertTrue(TimeUnit.MINUTES.toSeconds(15) >= TimeUnit.MILLISECONDS.toSeconds(stopWatch.getTime()));
+	}
+	@Test
+	public void highVolumeTrackLocationCompletableFuture() throws ExecutionException, InterruptedException {
+
+		Mockito.doNothing().when(trackerMock).run();
+
+		GpsUtil gpsUtil = new GpsUtil();
+
+		RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
+		// Users should be incremented up to 100,000, and test finishes within 15 minutes
+		InternalTestHelper.setInternalUserNumber(1000);
+
+		TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService, trackerMock);
+
+		List<User> allUsers = tourGuideService.getAllUsers();
+
+		StopWatch stopWatch = new StopWatch();
+
+		stopWatch.start();
+
+		for(User user : allUsers) {
+			tourGuideService.trackUserLocationCompletableFuture(user);
+		}
+		stopWatch.stop();
+		tourGuideService.tracker.stopTracking();
+
+		verify(trackerMock, times(1)).stopTracking();
 
 		System.out.println("highVolumeTrackLocation: Time Elapsed: " + TimeUnit.MILLISECONDS.toSeconds(stopWatch.getTime()) + " seconds.");
 		assertTrue(TimeUnit.MINUTES.toSeconds(15) >= TimeUnit.MILLISECONDS.toSeconds(stopWatch.getTime()));

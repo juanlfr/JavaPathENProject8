@@ -3,7 +3,7 @@ package tourGuide.service;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
-import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -98,6 +98,14 @@ public class TourGuideService {
         user.addToVisitedLocations(visitedLocation);
         rewardsService.calculateRewards(user);
         return visitedLocation;
+    }
+
+    public VisitedLocation trackUserLocationCompletableFuture(User user) throws ExecutionException, InterruptedException {
+        logger.debug("trackUserLocation CompletableFuture");
+       // Executor executor = Executors.newFixedThreadPool(20);
+        CompletableFuture<VisitedLocation> getUserLocationFuture = CompletableFuture.supplyAsync(() -> gpsUtil.getUserLocation(user.getUserId()));
+        getUserLocationFuture.thenAccept(user::addToVisitedLocations).thenRunAsync(() ->  rewardsService.calculateRewards(user));
+        return getUserLocationFuture.get();
     }
     public VisitedLocation trackUserLocationForkJoin(List<User> users) {
         logger.debug("trackUserLocation ForkJoin");
