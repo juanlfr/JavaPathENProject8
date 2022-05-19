@@ -119,7 +119,7 @@ public class TestPerformance {
 	@Test
 	public void highVolumeTrackLocationCompletableFuture() throws ExecutionException, InterruptedException {
 
-		Mockito.doNothing().when(trackerMock).run();
+		Mockito.doNothing().when(trackerMock).start();
 
 		GpsUtil gpsUtil = new GpsUtil();
 
@@ -135,9 +135,18 @@ public class TestPerformance {
 
 		stopWatch.start();
 
-		for(User user : allUsers) {
-			tourGuideService.trackUserLocationCompletableFuture(user);
-		}
+		allUsers.stream().parallel().forEach(user -> {
+			try {
+				tourGuideService.trackUserLocationCompletableFuture(user);
+			} catch (ExecutionException e) {
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		});
+//		for(User user : allUsers) {
+//			tourGuideService.trackUserLocationCompletableFuture(user);
+//		}
 		stopWatch.stop();
 		tourGuideService.tracker.stopTracking();
 
@@ -151,7 +160,7 @@ public class TestPerformance {
 	@Test
 	public void highVolumeGetRewards() {
 
-		Mockito.doNothing().when(trackerMock).run();
+		Mockito.doNothing().when(trackerMock).start();
 
 		System.out.println("**************** Test 2 highVolumeGetRewards *********** ");
 		GpsUtil gpsUtil = new GpsUtil();

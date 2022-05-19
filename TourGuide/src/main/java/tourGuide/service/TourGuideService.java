@@ -19,6 +19,7 @@ import gpsUtil.location.VisitedLocation;
 import rewardCentral.RewardCentral;
 import tourGuide.DTO.AttractionDTO;
 import tourGuide.helper.InternalTestHelper;
+import tourGuide.proxies.MicroserviceGpsProxy;
 import tourGuide.task.CalculateRewardTask;
 import tourGuide.task.UserLocationTask;
 import tourGuide.tracker.Tracker;
@@ -38,6 +39,8 @@ public class TourGuideService {
     private final TripPricer tripPricer = new TripPricer();
     public Tracker tracker;
     boolean testMode = true;
+    @Autowired
+    private MicroserviceGpsProxy microserviceGpsProxy;
 
 
     public TourGuideService(GpsUtil gpsUtil, RewardsService rewardsService, Tracker tracker) {
@@ -94,7 +97,8 @@ public class TourGuideService {
 
     public VisitedLocation trackUserLocation(User user) {
         logger.debug("trackUserLocation");
-        VisitedLocation visitedLocation = gpsUtil.getUserLocation(user.getUserId());
+        //VisitedLocation visitedLocation = gpsUtil.getUserLocation(user.getUserId());
+        VisitedLocation visitedLocation = microserviceGpsProxy.getLocation(user.getUserId());
         user.addToVisitedLocations(visitedLocation);
         rewardsService.calculateRewards(user);
         return visitedLocation;

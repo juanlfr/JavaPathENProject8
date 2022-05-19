@@ -8,3 +8,5 @@
  */
 
 rootProject.name = 'TourGuide'
+include 'microservice-gps'
+
